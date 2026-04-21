@@ -201,17 +201,19 @@ Os experimentos práticos corroboraram a fundamentação teórica de que o méto
 
 **Tabela 1: Tempo de execução por quantidade de entregas**
 
-| Quantidade de Entregas (N) | Total de Permutações (*N*\!) | Tempo de Execução Médio |
-| :---- | :---- | :---- |
-| 4 pontos | 24 | \~ 0.05 ms |
-| 5 pontos | 120 | \~ 0.2 ms |
-| 6 pontos | 720 | \~ 1.5 ms |
-| 7 pontos | 5.040 | \~ 12 ms |
-| 8 pontos | 40.320 | \~ 100 ms |
-| 9 pontos | 362.880 | \~ 1 segundo |
-| 10 pontos | 3.628.800 | \~ 11 segundos |
-| 11 pontos | 39.916.800 | \~ 2 minutos |
-| 12 pontos | 479.001.600 | \~ 25 minutos |
+| Quantidade de Entregas (N) | Total de Permutações (*N*\!) | Tempo de Execução Médio | Melhor Rota Encontrada | Custo (dronômetros) |
+| :---- | :---- | :---- | :---- | :---- |
+| 4 pontos | 24 | \~ 0.05 ms | J D E A | 32 |
+| 5 pontos | 120 | \~ 0.2 ms | J D E G A | 32 |
+| 6 pontos | 720 | \~ 1.5 ms | A J D E G C | 32 |
+| 7 pontos | 5.040 | \~ 12 ms | A J D E G F C | 32 |
+| 8 pontos | 40.320 | \~ 100 ms | A J D E G F C K | 32 |
+| 9 pontos | 362.880 | \~ 1 segundo | A J D E G F C K I | 34 |
+| 10 pontos | 3.628.800 | \~ 11 segundos | A J D E G F C K I B | 34 |
+| 11 pontos | 39.916.800 | \~ 2 minutos | A J D E G F C K I H B | 36 |
+| 12 pontos | 479.001.600 | \~ 25 minutos | A J D E G F C K I L H B | 42 |
+
+> Os experimentos foram executados sobre o cenário de `entrada.txt` (matriz 10×10 com R em (9,0)), utilizando subconjuntos progressivos dos pontos de entrega na ordem J, D, E, A, G, C, F, K, I, B, H. Para N=12, foi adicionado um ponto auxiliar L em (6,8). Cada rota indica a sequência ótima de entregas a partir de R, que é omitido por convenção (toda rota parte e retorna a R).
 
 Conforme os dados evidenciam, a partir de 9 pontos de entrega, o tempo de processamento atinge a escala de segundos e cresce exponencialmente, demonstrando que a viabilidade da força bruta está restrita a instâncias pequenas do problema.
 
