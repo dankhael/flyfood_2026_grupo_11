@@ -6,6 +6,8 @@ para encontrar a rota de menor custo (distância Manhattan) entre os
 pontos de entrega, partindo e retornando ao ponto R.
 """
 
+import math
+import time
 from itertools import permutations
 
 
@@ -89,15 +91,26 @@ def encontrar_menor_rota(pontos):
         menor_custo (int): custo total da melhor rota em dronômetros
     """
     entregas = [p for p in pontos if p != "R"]
+    total_permutacoes = math.factorial(len(entregas))
+    print(f"[LOG] Força bruta: {len(entregas)}! = {total_permutacoes} rotas a testar")
 
     melhor_rota = None
     menor_custo = float("inf")
+    rotas_testadas = 0
+    atualizacoes = 0
 
+    inicio = time.perf_counter()
     for perm in permutations(entregas):
         custo = calcular_custo_rota(perm, pontos)
+        rotas_testadas += 1
         if custo < menor_custo:
             menor_custo = custo
             melhor_rota = perm
+            atualizacoes += 1
+
+    duracao = time.perf_counter() - inicio
+    print(f"[LOG] Busca concluída em {duracao*1000:.2f} ms "
+          f"({rotas_testadas} rotas, {atualizacoes} melhorias do ótimo)")
 
     return melhor_rota, menor_custo
 
@@ -121,7 +134,13 @@ def main(caminho_arquivo="entrada.txt"):
 
     Lê a matriz do arquivo, encontra a menor rota e exibe o resultado.
     """
+    inicio_total = time.perf_counter()
+
+    print(f"[LOG] Lendo matriz de '{caminho_arquivo}'...")
+    t0 = time.perf_counter()
     pontos = ler_matriz(caminho_arquivo)
+    print(f"[LOG] Leitura em {(time.perf_counter()-t0)*1000:.2f} ms "
+          f"({len(pontos)} pontos identificados)")
 
     entregas = [p for p in pontos if p != "R"]
     print(f"Ponto de origem (R): {pontos['R']}")
@@ -131,8 +150,10 @@ def main(caminho_arquivo="entrada.txt"):
     melhor_rota, menor_custo = encontrar_menor_rota(pontos)
 
     resultado = formatar_resultado(melhor_rota)
+    print()
     print(f"Melhor rota: {resultado}")
     print(f"Custo total: {menor_custo} dronômetros")
+    print(f"[LOG] Tempo total: {(time.perf_counter()-inicio_total)*1000:.2f} ms")
 
     return resultado
 
