@@ -1,23 +1,15 @@
 """
-Testes para o Projeto FlyFood.
+Testes para o Projeto FlyFood (versão paralela).
 
-Cobre os seguintes cenários:
-- Leitura de matriz a partir de arquivo
-- Cálculo de distância Manhattan
-- Cálculo de custo de rota
-- Encontrar menor rota (força bruta)
-- Casos com 1, 2, 3, 4 e 5 pontos de entrega
-- Pontos na mesma linha/coluna
-- Pontos nos cantos da matriz
-- Matriz grande
-- Validação do exemplo do enunciado
+Mesma bateria de testes de test_flyfood.py, apontando para flyfood_parallel.
+A API pública é idêntica, então os testes não precisam mudar - apenas o import.
 """
 
 import os
 import tempfile
 import pytest
 
-from flyfood import (
+from flyfood_parallel import (
     ler_matriz,
     distancia_manhattan,
     calcular_custo_rota,
@@ -151,9 +143,6 @@ class TestEncontrarMenorRota:
         assert set(rota) == {"A", "B", "C", "D"}
 
         # Verifica que o custo é ótimo.
-        # Rota ótima: R->B->A->D->C->R = 2 + 3 + 5 + 2 + 6 = 18
-        # Ou equivalentes com mesmo custo
-        # Vamos calcular manualmente o custo para confirmar
         assert custo == calcular_custo_rota(rota, pontos)
 
         # Verifica que nenhuma outra permutação tem custo menor
@@ -336,87 +325,93 @@ class TestIntegracao:
         finally:
             os.unlink(caminho)
 
-    def test_escalabilidade_ate_13_entregas(self):
+    def test_escalabilidade_ate_15_entregas(self):
         """
-        Teste de escalabilidade com até 13 entregas.
-        
-        Para cada número de entregas (1-13):
+        Teste de escalabilidade com até 15 entregas.
+
+        Para cada número de entregas (1-15):
         - Cria uma grade com R no centro e pontos distribuídos
         - Exibe a grade visualmente
-        - Resolve o TSP com força bruta
+        - Resolve o TSP com força bruta paralela/otimizada
         - Registra tempo, melhor rota e custo
+
+        ATENÇÃO: n=14 e n=15 levam tempo considerável mesmo na versão paralela.
+        Com numpy+numba instalados (`pip install numpy numba`) cada nível é
+        executado em minutos. Sem eles, n=15 pode levar horas.
         """
         import time
-        import sys
-        
-        print("\n" + "="*80)
-        print("TESTE DE ESCALABILIDADE - TSP COM ATÉ 13 ENTREGAS")
-        print("="*80)
-        
-        # Distribuição de pontos em espiral para melhor cobertura da grade
+
+        print("\n" + "=" * 80)
+        print("TESTE DE ESCALABILIDADE (PARALELO) - TSP COM ATÉ 15 ENTREGAS")
+        print("=" * 80)
+
+        # Distribuição de pontos em espiral para melhor cobertura da grade 6x6.
+        # R fica em (2, 2); as 15 entregas preenchem o anel externo e o centro.
         pontos_espiral = [
             (1, 1), (1, 2), (1, 3), (1, 4),  # linha 1
             (2, 4), (3, 4), (4, 4),          # coluna 4
             (4, 3), (4, 2), (4, 1),          # linha 4
             (3, 1), (2, 1),                  # coluna 1
-            (3, 2),                           # centro extra
+            (3, 2),                          # centro extra
+            (2, 3),                          # centro extra (lado direito de R)
+            (1, 5),                          # canto superior direito estendido
         ]
-        
-        tamanho_grade = 5  # Grade 5x5
-        centro = (2, 2)   # Posição de R
-        
+
+        tamanho_grade = 6  # Grade 6x6 para acomodar até 15 entregas
+        centro = (2, 2)    # Posição de R
+
         resultados = []
-        
-        for num_entregas in range(1, 14):
-            print(f"\n{'-'*80}")
+
+        for num_entregas in range(1, 16):
+            print(f"\n{'-' * 80}")
             print(f"TESTE {num_entregas}: {num_entregas} ENTREGA(S)")
-            print(f"{'-'*80}")
-            
-            # Criar pontos de entrega (letras de A a M para até 13)
+            print(f"{'-' * 80}")
+
+            # Criar pontos de entrega (letras de A a O para até 15)
             letras_entrega = [chr(ord('A') + i) for i in range(num_entregas)]
-            
+
             # Construir matriz com pontos em posições específicas
             matriz = [["0"] * tamanho_grade for _ in range(tamanho_grade)]
             matriz[centro[0]][centro[1]] = "R"
-            
+
             pontos_dict = {"R": centro}
             for i, letra in enumerate(letras_entrega):
                 pos = pontos_espiral[i]
                 matriz[pos[0]][pos[1]] = letra
                 pontos_dict[letra] = pos
-            
+
             # Exibir grade
             print("\nGRADE:")
             for i, linha in enumerate(matriz):
                 print(f"  {i} | " + " | ".join(f"{elem:^3}" for elem in linha))
             print("    +" + "-+-" * tamanho_grade)
             print("      " + "   ".join(str(i) for i in range(tamanho_grade)))
-            
+
             print(f"\nPontos:")
             print(f"  Origem (R): {pontos_dict['R']}")
             for letra in letras_entrega:
                 print(f"  {letra}: {pontos_dict[letra]}")
-            
+
             # Resolver TSP
             print(f"\nResolvendo ({num_entregas}! = {__import__('math').factorial(num_entregas)} permutações)...")
             inicio = time.perf_counter()
             melhor_rota, menor_custo = encontrar_menor_rota(pontos_dict)
             tempo_decorrido = (time.perf_counter() - inicio) * 1000  # em ms
-            
+
             resultado_formatado = formatar_resultado(melhor_rota)
-            
+
             # Exibir resultados
             print(f"\n✓ RESULTADO:")
             print(f"  Melhor rota: {resultado_formatado}")
             print(f"  Custo total: {menor_custo} dronômetros")
             print(f"  Tempo: {tempo_decorrido:.3f} ms")
-            
+
             # Validação
             assert set(melhor_rota) == set(letras_entrega), \
                 f"Rota não contém todos os pontos de entrega"
             assert menor_custo == calcular_custo_rota(melhor_rota, pontos_dict), \
                 f"Custo calculado incorretamente"
-            
+
             # Guardar resultado
             resultados.append({
                 "entregas": num_entregas,
@@ -424,25 +419,25 @@ class TestIntegracao:
                 "custo": menor_custo,
                 "tempo_ms": tempo_decorrido,
             })
-        
+
         # Exibir resumo geral
-        print(f"\n{'='*80}")
+        print(f"\n{'=' * 80}")
         print("RESUMO GERAL")
-        print(f"{'='*80}")
+        print(f"{'=' * 80}")
         print(f"{'Entregas':<12} {'Custo':<10} {'Tempo (ms)':<15} {'Rota':<40}")
         print("-" * 80)
         for res in resultados:
             print(f"{res['entregas']:<12} {res['custo']:<10} {res['tempo_ms']:<15.3f} {res['rota']:<40}")
-        
-        # Validar crescimento exponencial de tempo (esperado para força bruta)
-        print(f"\n{'='*80}")
+
+        # Validar crescimento de tempo
+        print(f"\n{'=' * 80}")
         print("ANÁLISE DE COMPLEXIDADE")
-        print(f"{'='*80}")
+        print(f"{'=' * 80}")
         for i, res in enumerate(resultados):
-            if i > 0:
-                razao = res['tempo_ms'] / resultados[i-1]['tempo_ms']
-                entregas_razao = res['entregas'] / resultados[i-1]['entregas']
-                print(f"De {resultados[i-1]['entregas']} → {res['entregas']} entregas: "
+            if i > 0 and resultados[i - 1]['tempo_ms'] > 0:
+                razao = res['tempo_ms'] / resultados[i - 1]['tempo_ms']
+                entregas_razao = res['entregas'] / resultados[i - 1]['entregas']
+                print(f"De {resultados[i - 1]['entregas']} → {res['entregas']} entregas: "
                       f"tempo aumentou {razao:.1f}x (esperado ~{entregas_razao:.1f}x para n!)")
 
 
