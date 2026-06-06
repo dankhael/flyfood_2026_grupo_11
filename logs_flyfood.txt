@@ -1,0 +1,11 @@
+[LOG] Lendo matriz de 'entrada.txt'...
+[LOG] Leitura em 0.10 ms (13 pontos identificados)
+Ponto de origem (R): (11, 0)
+Pontos de entrega: I (2, 8), B (3, 10), A (5, 4), K (5, 5), D (5, 11), G (6, 3), H (6, 11), E (7, 3), L (7, 11), J (11, 8), C (11, 10), F (11, 11)
+
+[LOG] Força bruta: 12! = 479001600 rotas a testar
+[LOG] Busca concluída em 1227019.15 ms (479001600 rotas, 22 melhorias do ótimo)
+
+Melhor rota: E G A K I B D H L F C J
+Custo total: 40 dronômetros
+[LOG] Tempo total: 1227019.45 ms
